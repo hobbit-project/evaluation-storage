@@ -21,7 +21,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.hobbit</groupId>
 	<artifactId>evaluation-storage</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 
 	<!-- LICENSE -->
 	<licenses>
@@ -55,7 +55,7 @@
 		<dependency>
 			<groupId>org.hobbit</groupId>
 			<artifactId>core</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.1</version>
 		</dependency>
 		<!-- Riak client -->
 		<dependency>
@@ -73,6 +73,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>${project.artifactId}</finalName>
 		<plugins>
             <!-- Shade plugin for generating a single jar file containing all dependencies -->
 			<plugin>

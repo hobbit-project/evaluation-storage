@@ -1,6 +1,6 @@
 FROM openjdk:8
 
-ADD target/evaluation-storage-1.0.0.jar /evalrun/evaluation-storage.jar
+ADD target/evaluation-storage.jar /evalrun/evaluation-storage.jar
 
 WORKDIR /evalrun
 
