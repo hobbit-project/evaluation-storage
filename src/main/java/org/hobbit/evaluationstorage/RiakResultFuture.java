@@ -26,12 +26,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Promise for Riak results.
  *
  * @author Ruben Taelman (ruben.taelman@ugent.be)
  */
 public class RiakResultFuture implements ResultFuture {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RiakResultFuture.class);
 
     private final RiakFuture<FetchValue.Response, Location> riakFuture;
 
@@ -56,9 +61,13 @@ public class RiakResultFuture implements ResultFuture {
 
     protected static SerializableResult responseToResult(FetchValue.Response response) {
         try {
-            return SerializableResult.deserialize(response.getValue(RiakObject.class).getValue().getValue());
-        } catch (UnresolvedConflictException e) {
-            e.printStackTrace();
+            if (response.hasValues()) {
+                return SerializableResult.deserialize(response.getValue(RiakObject.class).getValue().getValue());
+            } else {
+                LOGGER.info("Got a response without a value. Returning null.");
+            }
+        } catch (Exception e) {
+            LOGGER.error("Got an exception while trying to deserialize the result from Riak. Returning null.", e);
         }
         return null;
     }
@@ -69,7 +78,8 @@ public class RiakResultFuture implements ResultFuture {
     }
 
     @Override
-    public SerializableResult get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public SerializableResult get(long timeout, TimeUnit unit)
+            throws InterruptedException, ExecutionException, TimeoutException {
         return responseToResult(riakFuture.get(timeout, unit));
     }
 }
