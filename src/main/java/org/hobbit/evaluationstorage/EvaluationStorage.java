@@ -16,17 +16,19 @@
  */
 package org.hobbit.evaluationstorage;
 
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.IOUtils;
 import org.hobbit.core.Commands;
 import org.hobbit.core.components.AbstractEvaluationStorage;
 import org.hobbit.core.data.ResultPair;
 import org.hobbit.core.rabbit.RabbitMQUtils;
+import org.hobbit.evaluationstorage.resultstore.FileResultStoreFacade;
 import org.hobbit.evaluationstorage.resultstore.ResultStoreFacade;
 import org.hobbit.evaluationstorage.resultstore.RiakResultStoreFacade;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * The Evaluation Storage is a component that stores the gold standard results
@@ -37,14 +39,17 @@ import java.util.Iterator;
  * @author Ruben Taelman (ruben.taelman@ugent.be)
  */
 public class EvaluationStorage extends AbstractEvaluationStorage {
-
-    protected ResultStoreFacade resultStoreFacade;
+    protected ResultStoreFacade smallResultStoreFacade;
+    protected ResultStoreFacade bigResultStoreFacade;
     protected Exception exception;
+
+    private static final int MAX_OBJECT_SIZE = 100 * 1024; // 100mb
 
     @Override
     public void init() throws Exception {
         super.init();
-        this.resultStoreFacade = new RiakResultStoreFacade(new ContainerController() {
+        // create and init riak storage for small results
+        this.smallResultStoreFacade = new RiakResultStoreFacade(new ContainerController() {
             @Override
             public String createContainer(String imageName, String[] envVariables) {
                 return EvaluationStorage.this.createContainer(imageName, envVariables);
@@ -55,12 +60,14 @@ public class EvaluationStorage extends AbstractEvaluationStorage {
                 EvaluationStorage.this.stopContainer(containerId);
             }
         });
-        this.resultStoreFacade.init();
+        this.smallResultStoreFacade.init();
+        // create and init file storage for large results
+        this.bigResultStoreFacade = new FileResultStoreFacade();
     }
 
     @Override
     public void run() throws Exception {
-        resultStoreFacade.run();
+        smallResultStoreFacade.run();
         super.run();
         if (exception != null) {
             throw new IllegalStateException("Got an unexpected exception. Aborting.", exception);
@@ -69,23 +76,36 @@ public class EvaluationStorage extends AbstractEvaluationStorage {
 
     @Override
     public void close() throws IOException {
-        IOUtils.closeQuietly(resultStoreFacade);
+        IOUtils.closeQuietly(smallResultStoreFacade);
         super.close();
     }
 
     @Override
     public void receiveExpectedResponseData(String s, long l, byte[] bytes) {
-        resultStoreFacade.put(ResultType.EXPECTED, s, new SerializableResult(l, bytes));
+        int actualSize = bytes.length / 1024;
+        if (actualSize < MAX_OBJECT_SIZE) {
+            smallResultStoreFacade.put(ResultType.EXPECTED, s, new SerializableResult(l, bytes));
+        } else {
+            bigResultStoreFacade.put(ResultType.EXPECTED, s, new SerializableResult(l, bytes));
+        }
     }
 
     @Override
     public void receiveResponseData(String s, long l, byte[] bytes) {
-        resultStoreFacade.put(ResultType.ACTUAL, s, new SerializableResult(l, bytes));
+        int actualSize = bytes.length / 1024;
+        if (actualSize < MAX_OBJECT_SIZE) {
+            smallResultStoreFacade.put(ResultType.ACTUAL, s, new SerializableResult(l, bytes));
+        } else {
+            bigResultStoreFacade.put(ResultType.ACTUAL, s, new SerializableResult(l, bytes));
+        }
     }
 
     @Override
     protected Iterator<ResultPair> createIterator() {
-        return resultStoreFacade.createIterator();
+        Iterator<ResultPair> si = smallResultStoreFacade.createIterator();
+        Iterator<ResultPair> bi = bigResultStoreFacade.createIterator();
+
+        return IteratorUtils.chainedIterator(si, bi);
     }
 
     @Override
@@ -96,7 +116,7 @@ public class EvaluationStorage extends AbstractEvaluationStorage {
             String containerName = RabbitMQUtils.readString(buffer);
             int exitCode = buffer.get();
             try {
-                resultStoreFacade.containerStopped(containerName, exitCode);
+                smallResultStoreFacade.containerStopped(containerName, exitCode);
             } catch (Exception e) {
                 exception = e;
                 // release the mutex

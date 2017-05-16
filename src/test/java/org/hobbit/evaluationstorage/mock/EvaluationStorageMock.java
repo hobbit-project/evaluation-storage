@@ -33,7 +33,7 @@ public class EvaluationStorageMock extends EvaluationStorage {
     private final CountDownLatch startedLatch = new CountDownLatch(1);
 
     public ResultStoreFacade getResultStoreFacade() {
-        return this.resultStoreFacade;
+        return this.smallResultStoreFacade;
     }
 
     @Override
