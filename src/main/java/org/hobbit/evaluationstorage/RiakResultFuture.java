@@ -55,6 +55,10 @@ public class RiakResultFuture implements ResultFuture {
     }
 
     protected static SerializableResult responseToResult(FetchValue.Response response) {
+        if (response.isNotFound()) {
+            return null;
+        }
+
         try {
             return SerializableResult.deserialize(response.getValue(RiakObject.class).getValue().getValue());
         } catch (UnresolvedConflictException e) {
