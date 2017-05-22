@@ -1,18 +1,20 @@
 package org.hobbit.evaluationstorage.resultstore;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.jena.atlas.iterator.Iter;
-import org.hobbit.core.data.ResultPair;
-import org.hobbit.evaluationstorage.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+
+import org.apache.commons.io.FileUtils;
+import org.hobbit.core.data.ResultPair;
+import org.hobbit.evaluationstorage.FileResultFuture;
+import org.hobbit.evaluationstorage.FileResultPairIterator;
+import org.hobbit.evaluationstorage.ResultFuture;
+import org.hobbit.evaluationstorage.ResultType;
+import org.hobbit.evaluationstorage.SerializableResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by Tim Ermilov on 16.05.17.
@@ -73,7 +75,10 @@ public class FileResultStoreFacade implements ResultStoreFacade {
         String expectedFilePath = buildFilename(ResultType.EXPECTED.name(), "1");
         File expectedFolder = new File(expectedFilePath).getParentFile();
         String[] files = expectedFolder.list();
-
+        // If there are no files or the directory has not been created
+        if ((files == null) || (files.length == 0)) {
+            return Collections.emptyIterator();
+        }
         return new FileResultPairIterator(Arrays.asList(files).iterator(), this);
     }
 
