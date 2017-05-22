@@ -63,6 +63,7 @@ public class EvaluationStorage extends AbstractEvaluationStorage {
         this.smallResultStoreFacade.init();
         // create and init file storage for large results
         this.bigResultStoreFacade = new FileResultStoreFacade();
+        this.bigResultStoreFacade.init();
     }
 
     @Override
