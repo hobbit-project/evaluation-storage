@@ -111,8 +111,8 @@ public class EvaluationStorage extends AbstractEvaluationStorage {
 
     @Override
     public void receiveCommand(byte command, byte[] data) {
-        // If this is the signal that a container stopped
-        if (command == Commands.DOCKER_CONTAINER_TERMINATED) {
+        // If this is the signal that a container stopped (and we have a class that we need to notify)
+        if ((command == Commands.DOCKER_CONTAINER_TERMINATED) && (smallResultStoreFacade != null)) {
             ByteBuffer buffer = ByteBuffer.wrap(data);
             String containerName = RabbitMQUtils.readString(buffer);
             int exitCode = buffer.get();
