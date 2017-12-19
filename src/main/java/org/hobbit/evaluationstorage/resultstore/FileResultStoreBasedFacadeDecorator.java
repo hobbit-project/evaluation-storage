@@ -3,15 +3,9 @@ package org.hobbit.evaluationstorage.resultstore;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
 
 import org.apache.commons.io.FileUtils;
-import org.hobbit.core.data.ResultPair;
-import org.hobbit.evaluationstorage.FileResultFuture;
-import org.hobbit.evaluationstorage.FileResultPairIterator;
-import org.hobbit.evaluationstorage.ResultFuture;
+import org.hobbit.core.data.Result;
 import org.hobbit.evaluationstorage.ResultType;
 import org.hobbit.evaluationstorage.data.ResultValueType;
 import org.hobbit.evaluationstorage.data.SerializableResult;
@@ -27,7 +21,7 @@ public class FileResultStoreBasedFacadeDecorator extends AbstractResultStoreFaca
 
     private String storageFolder = "/hobbit/storage/results/";
     /**
-     * Maximum size of a result stored in the decorated store (in kB).
+     * Maximum size of a result stored in the decorated store (in byte).
      */
     private int maxDecoratedStoreSize;
 
@@ -64,8 +58,6 @@ public class FileResultStoreBasedFacadeDecorator extends AbstractResultStoreFaca
     @Override
     public void put(ResultType resultType, String taskId, SerializableResult result) {
         int actualSize = (result.getData() != null) ? result.getData().length : 0;
-        // transform into kB
-        actualSize /= 1024;
         if (actualSize <= maxDecoratedStoreSize) {
             decorated.put(resultType, taskId, result);
         } else {
@@ -86,41 +78,27 @@ public class FileResultStoreBasedFacadeDecorator extends AbstractResultStoreFaca
     }
 
     @Override
-    public ResultFuture get(ResultType resultType, String taskId) {
-        // FIXME This method is not aligned to the changes made in put!!!
-        String fileName = buildFilename(resultType.name(), taskId);
-        File sourceFile = new File(fileName);
-
-        if (sourceFile.exists()) {
-            try {
-                byte[] data = FileUtils.readFileToByteArray(sourceFile);
-                SerializableResult result = SerializableResult.deserialize(data);
-                return new FileResultFuture(result);
-            } catch (IOException e) {
-                LOGGER.error("Exception while trying to read file. Returning a future that contains null.", e);
+    protected SerializableResult handleResult(ResultType resultType, Result result) {
+        if ((result != null) && (result instanceof SerializableResult)) {
+            SerializableResult sResult = (SerializableResult) result;
+            if (ResultValueType.FILE_REF == sResult.getValueType()) {
+                String fileName = new String(sResult.getData(), StandardCharsets.UTF_8);
+                byte[] data = null;
+                File sourceFile = new File(fileName);
+                if (sourceFile.exists()) {
+                    try {
+                        data = FileUtils.readFileToByteArray(sourceFile);
+                    } catch (IOException e) {
+                        LOGGER.error("Exception while trying to read file. Returning a future that contains null.", e);
+                    }
+                } else {
+                    LOGGER.error("Requested file {} does not exist. Returning a future that contains null.",
+                            sourceFile.getAbsolutePath());
+                }
+                sResult.setData(data);
             }
-        } else {
-            LOGGER.debug("Requested file {} does not exist. Returning a future that contains null.",
-                    sourceFile.getAbsolutePath());
+            return sResult;
         }
-        return new FileResultFuture(null);
+        return new SerializableResult(result);
     }
-
-    @Override
-    public Iterator<ResultPair> createIterator() {
-
-        // FIXME This method needs to create a wrapper for the iterator of the decorated
-        // store! The wrapper has to decide whether it has to forward the result of the
-        // decorated store or whether it has to load the data from a file.
-
-        String expectedFilePath = buildFilename(ResultType.EXPECTED.name(), "1");
-        File expectedFolder = new File(expectedFilePath).getParentFile();
-        String[] files = expectedFolder.list();
-        // If there are no files or the directory has not been created
-        if ((files == null) || (files.length == 0)) {
-            return Collections.emptyIterator();
-        }
-        return new FileResultPairIterator(Arrays.asList(files).iterator(), this);
-    }
-
 }

@@ -1,16 +1,14 @@
-package org.hobbit.evaluationstorage;
+package org.hobbit.evaluationstorage.data;
 
 import java.util.concurrent.TimeUnit;
-
-import org.hobbit.evaluationstorage.data.SerializableResult;
 
 /**
  * Created by Tim Ermilov on 16.05.17.
  */
-public class FileResultFuture implements ResultFuture {
+public class SimpleResultFuture implements ResultFuture {
     private final SerializableResult value;
 
-    public FileResultFuture(SerializableResult value) {
+    public SimpleResultFuture(SerializableResult value) {
         this.value = value;
     }
 

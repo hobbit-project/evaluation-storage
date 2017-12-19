@@ -21,8 +21,8 @@ import java.util.Iterator;
 
 import org.hobbit.core.components.ContainerStateObserver;
 import org.hobbit.core.data.ResultPair;
-import org.hobbit.evaluationstorage.ResultFuture;
 import org.hobbit.evaluationstorage.ResultType;
+import org.hobbit.evaluationstorage.data.ResultFuture;
 import org.hobbit.evaluationstorage.data.SerializableResult;
 
 /**
@@ -61,6 +61,6 @@ public interface ResultStoreFacade extends Closeable, ContainerStateObserver {
      * in the order of expected result insertion.
      * @return A new iterator that will loop over all the result pairs.
      */
-    public Iterator<ResultPair> createIterator();
+    public Iterator<? extends ResultPair> createIterator();
 
 }

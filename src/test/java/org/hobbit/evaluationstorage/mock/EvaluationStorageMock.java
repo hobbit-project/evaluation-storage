@@ -18,6 +18,7 @@ package org.hobbit.evaluationstorage.mock;
 
 import org.hobbit.core.Commands;
 import org.hobbit.evaluationstorage.EvaluationStorage;
+import org.hobbit.evaluationstorage.resultstore.FileResultStoreBasedFacadeDecorator;
 import org.hobbit.evaluationstorage.resultstore.ResultStoreFacade;
 
 import java.io.IOException;
@@ -31,7 +32,18 @@ import java.util.concurrent.CountDownLatch;
 public class EvaluationStorageMock extends EvaluationStorage {
 
     private final CountDownLatch startedLatch = new CountDownLatch(1);
-
+    
+    @Override
+    public void init() throws Exception {
+        // create and init the storage facade(s)
+        resultStoreFacade = new InMemoryResultStore();
+        resultStoreFacade = new FileResultStoreBasedFacadeDecorator(resultStoreFacade, maxObjectSize);
+        if (storagePath != null) {
+            ((FileResultStoreBasedFacadeDecorator) resultStoreFacade).setStorageFolder(storagePath);
+        }
+        this.resultStoreFacade.init();
+    }
+    
     public EvaluationStorageMock() {
         super();
     }
@@ -41,7 +53,7 @@ public class EvaluationStorageMock extends EvaluationStorage {
     }
 
     public ResultStoreFacade getResultStoreFacade() {
-        return this.smallResultStoreFacade;
+        return this.resultStoreFacade;
     }
     
     @Override

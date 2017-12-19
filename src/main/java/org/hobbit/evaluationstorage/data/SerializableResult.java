@@ -32,7 +32,12 @@ public class SerializableResult implements Result {
 
     private final long sentTimestamp;
     private final ResultValueType valueType;
-    private final byte[] data;
+    private byte[] data;
+
+    public SerializableResult(Result result) {
+        this(result != null ? result.getSentTimestamp() : 0, ResultValueType.RESULT_DATA,
+                result != null ? result.getData() : null);
+    }
 
     public SerializableResult(long sentTimestamp, byte[] data) {
         this(sentTimestamp, ResultValueType.RESULT_DATA, data);
@@ -68,6 +73,14 @@ public class SerializableResult implements Result {
         return data;
     }
 
+    public ResultValueType getValueType() {
+        return valueType;
+    }
+
+    public void setData(byte[] data) {
+        this.data = data;
+    }
+
     public byte[] serialize() {
         return ByteBuffer.allocate(LONG_SIZE + 1 + data.length).putLong(sentTimestamp).put(valueType.toByte()).put(data)
                 .array();
@@ -76,8 +89,7 @@ public class SerializableResult implements Result {
     public static SerializableResult deserialize(byte[] serializedData) {
         long sentTimestamp = ByteBuffer.wrap(serializedData, 0, LONG_SIZE).getLong();
         ResultValueType valueType = ResultValueType.fromByte(serializedData[LONG_SIZE]);
-        byte[] data = Arrays.copyOfRange(serializedData, serializedData.length - (LONG_SIZE + 1),
-                serializedData.length);
+        byte[] data = Arrays.copyOfRange(serializedData, LONG_SIZE + 1, serializedData.length);
         return new SerializableResult(sentTimestamp, valueType, data);
     }
 }

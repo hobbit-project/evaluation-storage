@@ -14,13 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with evaluation-storage.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.hobbit.evaluationstorage;
+package org.hobbit.evaluationstorage.data;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.hobbit.evaluationstorage.data.SerializableResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

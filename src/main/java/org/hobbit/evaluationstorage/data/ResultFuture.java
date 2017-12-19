@@ -14,11 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with evaluation-storage.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.hobbit.evaluationstorage;
+package org.hobbit.evaluationstorage.data;
 
 import java.util.concurrent.Future;
-
-import org.hobbit.evaluationstorage.data.SerializableResult;
 
 /**
  * @author Ruben Taelman (ruben.taelman@ugent.be)

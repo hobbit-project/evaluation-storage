@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.BitSet;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -30,6 +31,7 @@ import org.hobbit.core.data.ResultPair;
 import org.hobbit.evaluationstorage.data.SerializableResult;
 import org.hobbit.evaluationstorage.mock.EvaluationStorageMock;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -53,15 +55,18 @@ public class EvaluationStorageTest {
         storageDir.deleteOnExit();
         storageDir.mkdirs();
         evaluationStorage = new EvaluationStorageMock(storageDir.getAbsolutePath());
+        // Reduce the max object size to make sure that files are written as
+        // well
+        evaluationStorage.setMaxObjectSize(5);
         evaluationStorage.init();
-        new Thread(() -> {
-            try {
-                evaluationStorage.run();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-        evaluationStorage.waitUntilStarted();
+        // new Thread(() -> {
+        // try {
+        // evaluationStorage.run();
+        // } catch (Exception e) {
+        // e.printStackTrace();
+        // }
+        // }).start();
+        // evaluationStorage.waitUntilStarted();
     }
 
     @After
@@ -72,9 +77,9 @@ public class EvaluationStorageTest {
 
     @Test
     public void testSendExpectedResponseData() throws ExecutionException, InterruptedException {
-        byte[] task1DataExpected = new byte[]{3, 1};
-        byte[] task2DataExpected = new byte[]{29, 12, 3, 2, 89, 2, 1};
-        byte[] task3DataExpected = new byte[]{29, 92, 3, 18, 39, 29, 103, 1};
+        byte[] task1DataExpected = new byte[] { 3, 1 };
+        byte[] task2DataExpected = new byte[] { 29, 12, 3, 2, 89, 2, 1 };
+        byte[] task3DataExpected = new byte[] { 29, 92, 3, 18, 39, 29, 103, 1 };
         evaluationStorage.receiveExpectedResponseData(TASK1, 0, task1DataExpected);
         evaluationStorage.receiveExpectedResponseData(TASK2, 1, task2DataExpected);
         evaluationStorage.receiveExpectedResponseData(TASK3, 2, task3DataExpected);
@@ -92,9 +97,9 @@ public class EvaluationStorageTest {
 
     @Test
     public void testSendResponseData() throws ExecutionException, InterruptedException {
-        byte[] task1DataActual = new byte[]{0, 1};
-        byte[] task2DataActual = new byte[]{12, 3, 2, 89, 2, 1};
-        byte[] task3DataActual = new byte[]{92, 3, 18, 39, 29, 103, 1};
+        byte[] task1DataActual = new byte[] { 0, 1 };
+        byte[] task2DataActual = new byte[] { 12, 3, 2, 89, 2, 1 };
+        byte[] task3DataActual = new byte[] { 92, 3, 18, 39, 29, 103, 1 };
         evaluationStorage.receiveResponseData(TASK1, 0, task1DataActual);
         evaluationStorage.receiveResponseData(TASK2, 1, task2DataActual);
         evaluationStorage.receiveResponseData(TASK3, 2, task3DataActual);
@@ -112,35 +117,51 @@ public class EvaluationStorageTest {
 
     @Test
     public void testIterator() {
-        evaluationStorage.setMaxObjectSize(5);
-        byte[] task1DataExpected = new byte[]{3, 2};
-        byte[] task2DataExpected = new byte[]{29, 12, 3, 2, 89, 2, 2};
-        byte[] task3DataExpected = new byte[]{29, 92, 3, 18, 39, 29, 103, 2};
+        byte[] task1DataExpected = new byte[] { 3, 2 };
+        byte[] task2DataExpected = new byte[] { 29, 12, 3, 2, 89, 2, 2 };
+        byte[] task3DataExpected = new byte[] { 29, 92, 3, 18, 39, 29, 103, 2 };
         evaluationStorage.receiveExpectedResponseData(TASK1, 0, task1DataExpected);
         evaluationStorage.receiveExpectedResponseData(TASK2, 1, task2DataExpected);
         evaluationStorage.receiveExpectedResponseData(TASK3, 2, task3DataExpected);
 
-        byte[] task1DataActual = new byte[]{0, 2};
-        byte[] task2DataActual = new byte[]{92, 3, 18, 39, 29, 103, 2};
-        byte[] task3DataActual = new byte[]{12, 3, 2};
+        byte[] task1DataActual = new byte[] { 0, 2 };
+        byte[] task2DataActual = new byte[] { 92, 3, 18, 39, 29, 103, 2 };
+        byte[] task3DataActual = new byte[] { 12, 3, 2 };
         evaluationStorage.receiveResponseData(TASK1, 0, task1DataActual);
         evaluationStorage.receiveResponseData(TASK2, 1, task2DataActual);
         evaluationStorage.receiveResponseData(TASK3, 2, task3DataActual);
 
-        Iterator<ResultPair> it = evaluationStorage.createIterator();
+        Iterator<? extends ResultPair> it = evaluationStorage.createIterator();
         ResultPair resultPair;
 
-        resultPair = it.next();
-        assertThat(resultPair.getExpected().getData(), is(task1DataExpected));
-        assertThat(resultPair.getActual().getData(), is(task1DataActual));
-
-        resultPair = it.next();
-        assertThat(resultPair.getExpected().getData(), is(task2DataExpected));
-        assertThat(resultPair.getActual().getData(), is(task2DataActual));
-
-        resultPair = it.next();
-        assertThat(resultPair.getExpected().getData(), is(task3DataExpected));
-        assertThat(resultPair.getActual().getData(), is(task3DataActual));
+        BitSet seenTasks = new BitSet(3);
+        int taskId;
+        while (it.hasNext()) {
+            resultPair = it.next();
+            taskId = (int) resultPair.getExpected().getSentTimestamp();
+            switch (taskId) {
+            case 0: {
+                assertThat(resultPair.getExpected().getData(), is(task1DataExpected));
+                assertThat(resultPair.getActual().getData(), is(task1DataActual));
+                break;
+            }
+            case 1: {
+                assertThat(resultPair.getExpected().getData(), is(task2DataExpected));
+                assertThat(resultPair.getActual().getData(), is(task2DataActual));
+                break;
+            }
+            case 2: {
+                assertThat(resultPair.getExpected().getData(), is(task3DataExpected));
+                assertThat(resultPair.getActual().getData(), is(task3DataActual));
+                break;
+            }
+            default: {
+                Assert.fail("Got a result with an unknown time stamp: " + taskId);
+            }
+            }
+            seenTasks.set(taskId);
+        }
+        Assert.assertEquals("Not all expected tasks have been retrieved", 3, seenTasks.cardinality());
     }
 
 }

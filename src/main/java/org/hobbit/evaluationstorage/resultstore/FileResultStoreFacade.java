@@ -8,10 +8,10 @@ import java.util.Iterator;
 
 import org.apache.commons.io.FileUtils;
 import org.hobbit.core.data.ResultPair;
-import org.hobbit.evaluationstorage.FileResultFuture;
 import org.hobbit.evaluationstorage.FileResultPairIterator;
-import org.hobbit.evaluationstorage.ResultFuture;
 import org.hobbit.evaluationstorage.ResultType;
+import org.hobbit.evaluationstorage.data.SimpleResultFuture;
+import org.hobbit.evaluationstorage.data.ResultFuture;
 import org.hobbit.evaluationstorage.data.SerializableResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +66,7 @@ public class FileResultStoreFacade implements ResultStoreFacade {
             try {
                 byte[] data = FileUtils.readFileToByteArray(sourceFile);
                 SerializableResult result = SerializableResult.deserialize(data);
-                return new FileResultFuture(result);
+                return new SimpleResultFuture(result);
             } catch (IOException e) {
                 LOGGER.error("Exception while trying to read file. Returning a future that contains null.", e);
             }
@@ -74,7 +74,7 @@ public class FileResultStoreFacade implements ResultStoreFacade {
             LOGGER.debug("Requested file {} does not exist. Returning a future that contains null.",
                     sourceFile.getAbsolutePath());
         }
-        return new FileResultFuture(null);
+        return new SimpleResultFuture(null);
     }
 
     @Override

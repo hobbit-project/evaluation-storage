@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with evaluation-storage.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.hobbit.evaluationstorage;
+package org.hobbit.evaluationstorage.data;
 
 import org.hobbit.core.data.Result;
 import org.hobbit.core.data.ResultPair;
-import org.hobbit.evaluationstorage.data.SerializableResult;
 
 /**
  * Data holder for expected and actual data.
@@ -27,8 +26,8 @@ import org.hobbit.evaluationstorage.data.SerializableResult;
  */
 public class SerializableResultPair implements ResultPair {
 
-    private final SerializableResult expected;
-    private final SerializableResult actual;
+    private SerializableResult expected;
+    private SerializableResult actual;
 
     public SerializableResultPair(SerializableResult expected, SerializableResult actual) {
         this.expected = expected;
@@ -39,9 +38,25 @@ public class SerializableResultPair implements ResultPair {
     public Result getExpected() {
         return expected;
     }
+    
+    public SerializableResult getExpectedSerializable() {
+        return expected;
+    }
 
     @Override
     public Result getActual() {
         return actual;
+    }
+    
+    public SerializableResult getActualSerializable() {
+        return actual;
+    }
+    
+    public void setActual(SerializableResult actual) {
+        this.actual = actual;
+    }
+    
+    public void setExpected(SerializableResult expected) {
+        this.expected = expected;
     }
 }

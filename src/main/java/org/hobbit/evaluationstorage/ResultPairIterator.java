@@ -18,6 +18,8 @@ package org.hobbit.evaluationstorage;
 
 import com.basho.riak.client.core.query.Location;
 import org.hobbit.core.data.ResultPair;
+import org.hobbit.evaluationstorage.data.ResultFuture;
+import org.hobbit.evaluationstorage.data.SerializableResultPair;
 import org.hobbit.evaluationstorage.resultstore.ResultStoreFacade;
 
 import java.util.Iterator;

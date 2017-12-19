@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
-import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.IOUtils;
 import org.hobbit.core.Commands;
 import org.hobbit.core.components.AbstractEvaluationStorage;
@@ -29,7 +28,6 @@ import org.hobbit.core.data.ResultPair;
 import org.hobbit.core.rabbit.RabbitMQUtils;
 import org.hobbit.evaluationstorage.data.SerializableResult;
 import org.hobbit.evaluationstorage.resultstore.FileResultStoreBasedFacadeDecorator;
-import org.hobbit.evaluationstorage.resultstore.FileResultStoreFacade;
 import org.hobbit.evaluationstorage.resultstore.ResultStoreFacade;
 import org.hobbit.evaluationstorage.resultstore.RiakResultStoreFacade;
 
@@ -43,8 +41,8 @@ import org.hobbit.evaluationstorage.resultstore.RiakResultStoreFacade;
  */
 public class EvaluationStorage extends AbstractEvaluationStorage implements Component {
 
-    private static final int MAX_OBJECT_SIZE = 100 * 1024; // 100mb
-    
+    private static final int MAX_OBJECT_SIZE = 100 * 1024 * 1024; // 100mb
+
     protected ResultStoreFacade resultStoreFacade;
     protected Exception exception;
     protected String storagePath;
@@ -62,7 +60,16 @@ public class EvaluationStorage extends AbstractEvaluationStorage implements Comp
     public void init() throws Exception {
         super.init();
         // create and init the storage facade(s)
-        resultStoreFacade = new RiakResultStoreFacade(new ContainerController() {
+        resultStoreFacade = createStoreFacade();
+        resultStoreFacade = new FileResultStoreBasedFacadeDecorator(resultStoreFacade, maxObjectSize);
+        if (storagePath != null) {
+            ((FileResultStoreBasedFacadeDecorator) resultStoreFacade).setStorageFolder(storagePath);
+        }
+        this.resultStoreFacade.init();
+    }
+
+    private ResultStoreFacade createStoreFacade() throws Exception {
+        return new RiakResultStoreFacade(new ContainerController() {
             @Override
             public String createContainer(String imageName, String[] envVariables) {
                 return EvaluationStorage.this.createContainer(imageName, envVariables);
@@ -73,11 +80,6 @@ public class EvaluationStorage extends AbstractEvaluationStorage implements Comp
                 EvaluationStorage.this.stopContainer(containerId);
             }
         });
-        resultStoreFacade = new FileResultStoreBasedFacadeDecorator(resultStoreFacade, maxObjectSize);
-        if (storagePath != null) {
-            ((FileResultStoreBasedFacadeDecorator) resultStoreFacade).setStorageFolder(storagePath);
-        }
-        this.resultStoreFacade.init();
     }
 
     @Override
@@ -96,7 +98,7 @@ public class EvaluationStorage extends AbstractEvaluationStorage implements Comp
 
     @Override
     public void receiveExpectedResponseData(String s, long l, byte[] bytes) {
-        resultStoreFacade.put(ResultType.EXPECTED, s, new SerializableResult(l,  bytes));
+        resultStoreFacade.put(ResultType.EXPECTED, s, new SerializableResult(l, bytes));
     }
 
     @Override
@@ -105,13 +107,14 @@ public class EvaluationStorage extends AbstractEvaluationStorage implements Comp
     }
 
     @Override
-    protected Iterator<ResultPair> createIterator() {
+    protected Iterator<? extends ResultPair> createIterator() {
         return resultStoreFacade.createIterator();
     }
 
     @Override
     public void receiveCommand(byte command, byte[] data) {
-        // If this is the signal that a container stopped (and we have a class that we
+        // If this is the signal that a container stopped (and we have a class
+        // that we
         // need to notify)
         if ((command == Commands.DOCKER_CONTAINER_TERMINATED) && (resultStoreFacade != null)) {
             ByteBuffer buffer = ByteBuffer.wrap(data);

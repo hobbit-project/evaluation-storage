@@ -23,7 +23,8 @@ import java.util.Random;
 import org.apache.commons.io.FileUtils;
 import org.hobbit.core.data.ResultPair;
 import org.hobbit.evaluationstorage.data.SerializableResult;
-import org.hobbit.evaluationstorage.resultstore.FileResultStoreFacade;
+import org.hobbit.evaluationstorage.mock.InMemoryResultStore;
+import org.hobbit.evaluationstorage.resultstore.FileResultStoreBasedFacadeDecorator;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -42,9 +43,11 @@ public class FileResultStoreFacadeTest {
 
     @Test
     public void setPutExpected() throws Exception {
-        FileResultStoreFacade resultStoreFacade = new FileResultStoreFacade();
+        FileResultStoreBasedFacadeDecorator resultStoreFacade = new FileResultStoreBasedFacadeDecorator(
+                new InMemoryResultStore(), 5);
         try {
-            resultStoreFacade.setDefaultPath(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
+            ((FileResultStoreBasedFacadeDecorator) resultStoreFacade)
+                    .setStorageFolder(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
             resultStoreFacade.init();
             SerializableResult task1Expected = new SerializableResult(0, new byte[] { 3 });
             SerializableResult task2Expected = new SerializableResult(1, new byte[] { 29, 12, 3, 2, 89, 2 });
@@ -56,9 +59,9 @@ public class FileResultStoreFacadeTest {
             SerializableResult result1 = resultStoreFacade.get(ResultType.EXPECTED, TASK1).get();
             SerializableResult result2 = resultStoreFacade.get(ResultType.EXPECTED, TASK2).get();
             SerializableResult result3 = resultStoreFacade.get(ResultType.EXPECTED, TASK3).get();
-            Assert.assertEquals(result1, task1Expected);
-            Assert.assertEquals(result2, task2Expected);
-            Assert.assertEquals(result3, task3Expected);
+            Assert.assertEquals(task1Expected, result1);
+            Assert.assertEquals(task2Expected, result2);
+            Assert.assertEquals(task3Expected, result3);
         } finally {
             resultStoreFacade.close();
         }
@@ -66,9 +69,11 @@ public class FileResultStoreFacadeTest {
 
     @Test
     public void testPutActual() throws Exception {
-        FileResultStoreFacade resultStoreFacade = new FileResultStoreFacade();
+        FileResultStoreBasedFacadeDecorator resultStoreFacade = new FileResultStoreBasedFacadeDecorator(
+                new InMemoryResultStore(), 5);
         try {
-            resultStoreFacade.setDefaultPath(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
+            ((FileResultStoreBasedFacadeDecorator) resultStoreFacade)
+                    .setStorageFolder(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
             resultStoreFacade.init();
             SerializableResult task1Actual = new SerializableResult(0, new byte[] { 0 });
             SerializableResult task2Actual = new SerializableResult(1, new byte[] { 12, 3, 2, 89, 2 });
@@ -80,9 +85,9 @@ public class FileResultStoreFacadeTest {
             SerializableResult result1 = resultStoreFacade.get(ResultType.ACTUAL, TASK1).get();
             SerializableResult result2 = resultStoreFacade.get(ResultType.ACTUAL, TASK2).get();
             SerializableResult result3 = resultStoreFacade.get(ResultType.ACTUAL, TASK3).get();
-            Assert.assertEquals(result1, task1Actual);
-            Assert.assertEquals(result2, task2Actual);
-            Assert.assertEquals(result3, task3Actual);
+            Assert.assertEquals(task1Actual, result1);
+            Assert.assertEquals(task2Actual, result2);
+            Assert.assertEquals(task3Actual, result3);
         } finally {
             resultStoreFacade.close();
         }
@@ -90,9 +95,11 @@ public class FileResultStoreFacadeTest {
 
     @Test
     public void testIterator() throws Exception {
-        FileResultStoreFacade resultStoreFacade = new FileResultStoreFacade();
+        FileResultStoreBasedFacadeDecorator resultStoreFacade = new FileResultStoreBasedFacadeDecorator(
+                new InMemoryResultStore(), 5);
         try {
-            resultStoreFacade.setDefaultPath(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
+            ((FileResultStoreBasedFacadeDecorator) resultStoreFacade)
+                    .setStorageFolder(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
             resultStoreFacade.init();
             SerializableResult task1Expected = new SerializableResult(0, new byte[] { 3 });
             SerializableResult task2Expected = new SerializableResult(1, new byte[] { 29, 12, 3, 2, 89, 2 });
@@ -108,20 +115,20 @@ public class FileResultStoreFacadeTest {
             resultStoreFacade.put(ResultType.ACTUAL, TASK2, task2Actual);
             resultStoreFacade.put(ResultType.ACTUAL, TASK3, task3Actual);
 
-            Iterator<ResultPair> it = resultStoreFacade.createIterator();
+            Iterator<? extends ResultPair> it = resultStoreFacade.createIterator();
             ResultPair resultPair;
 
             resultPair = it.next();
-            Assert.assertEquals(resultPair.getExpected(), task1Expected);
-            Assert.assertEquals(resultPair.getActual(), task1Actual);
+            Assert.assertEquals(task1Expected, resultPair.getExpected());
+            Assert.assertEquals(task1Actual, resultPair.getActual());
 
             resultPair = it.next();
-            Assert.assertEquals(resultPair.getExpected(), task2Expected);
-            Assert.assertEquals(resultPair.getActual(), task2Actual);
+            Assert.assertEquals(task2Expected, resultPair.getExpected());
+            Assert.assertEquals(task2Actual, resultPair.getActual());
 
             resultPair = it.next();
-            Assert.assertEquals(resultPair.getExpected(), task3Expected);
-            Assert.assertEquals(resultPair.getActual(), task3Actual);
+            Assert.assertEquals(task3Expected, resultPair.getExpected());
+            Assert.assertEquals(task3Actual, resultPair.getActual());
         } finally {
             resultStoreFacade.close();
         }
@@ -129,12 +136,15 @@ public class FileResultStoreFacadeTest {
 
     @Test
     public void testMissingResult() throws Exception {
-        FileResultStoreFacade resultStoreFacade = new FileResultStoreFacade();
+        FileResultStoreBasedFacadeDecorator resultStoreFacade = new FileResultStoreBasedFacadeDecorator(
+                new InMemoryResultStore(), 5);
         try {
-            resultStoreFacade.setDefaultPath(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
+            ((FileResultStoreBasedFacadeDecorator) resultStoreFacade)
+                    .setStorageFolder(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
             resultStoreFacade.init();
-            Assert.assertNull(resultStoreFacade.get(ResultType.ACTUAL, TASK1).get());
-            Assert.assertNull(resultStoreFacade.get(ResultType.EXPECTED, TASK1).get());
+            SerializableResult expectedResult = new SerializableResult(0, null);
+            Assert.assertEquals(expectedResult, resultStoreFacade.get(ResultType.ACTUAL, TASK1).get());
+            Assert.assertEquals(expectedResult, resultStoreFacade.get(ResultType.EXPECTED, TASK1).get());
         } finally {
             resultStoreFacade.close();
         }
