@@ -59,15 +59,19 @@ public class FileResultStoreFacade implements ResultStoreFacade {
         String fileName = buildFilename(resultType.name(), taskId);
         File sourceFile = new File(fileName);
 
-        try {
-            byte[] data = FileUtils.readFileToByteArray(sourceFile);
-            SerializableResult result = SerializableResult.deserialize(data);
-            return new FileResultFuture(result);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (sourceFile.exists()) {
+            try {
+                byte[] data = FileUtils.readFileToByteArray(sourceFile);
+                SerializableResult result = SerializableResult.deserialize(data);
+                return new FileResultFuture(result);
+            } catch (IOException e) {
+                LOGGER.error("Exception while trying to read file. Returning a future that contains null.", e);
+            }
+        } else {
+            LOGGER.debug("Requested file {} does not exist. Returning a future that contains null.",
+                    sourceFile.getAbsolutePath());
         }
-
-        return null;
+        return new FileResultFuture(null);
     }
 
     @Override

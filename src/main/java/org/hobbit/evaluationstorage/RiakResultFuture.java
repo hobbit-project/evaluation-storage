@@ -16,18 +16,17 @@
  */
 package org.hobbit.evaluationstorage;
 
-import com.basho.riak.client.api.cap.UnresolvedConflictException;
-import com.basho.riak.client.api.commands.kv.FetchValue;
-import com.basho.riak.client.core.RiakFuture;
-import com.basho.riak.client.core.query.Location;
-import com.basho.riak.client.core.query.RiakObject;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.basho.riak.client.api.commands.kv.FetchValue;
+import com.basho.riak.client.core.RiakFuture;
+import com.basho.riak.client.core.query.Location;
+import com.basho.riak.client.core.query.RiakObject;
 
 /**
  * Promise for Riak results.
