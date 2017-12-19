@@ -22,6 +22,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 
+import org.hobbit.evaluationstorage.data.SerializableResult;
+
 /**
  * Tests for the result data holder.
  *

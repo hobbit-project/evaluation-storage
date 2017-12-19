@@ -32,7 +32,7 @@ import org.hobbit.evaluationstorage.ResultFuture;
 import org.hobbit.evaluationstorage.ResultPairIterator;
 import org.hobbit.evaluationstorage.ResultType;
 import org.hobbit.evaluationstorage.RiakResultFuture;
-import org.hobbit.evaluationstorage.SerializableResult;
+import org.hobbit.evaluationstorage.data.SerializableResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -213,11 +213,6 @@ public class RiakResultStoreFacade implements ResultStoreFacade {
                 Thread.sleep(1000);
             }
         }
-    }
-
-    @Override
-    public void run() throws Exception {
-        // nothing to do
     }
 
     @Override

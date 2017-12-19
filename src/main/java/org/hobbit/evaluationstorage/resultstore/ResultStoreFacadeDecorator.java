@@ -14,15 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with evaluation-storage.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.hobbit.evaluationstorage;
+package org.hobbit.evaluationstorage.resultstore;
 
-import java.util.concurrent.Future;
+public interface ResultStoreFacadeDecorator extends ResultStoreFacade {
 
-import org.hobbit.evaluationstorage.data.SerializableResult;
-
-/**
- * @author Ruben Taelman (ruben.taelman@ugent.be)
- */
-public interface ResultFuture extends Future<SerializableResult> {
+    public ResultStoreFacade getDecorated();
 
 }

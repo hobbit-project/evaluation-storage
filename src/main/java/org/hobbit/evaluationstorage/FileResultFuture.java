@@ -2,6 +2,8 @@ package org.hobbit.evaluationstorage;
 
 import java.util.concurrent.TimeUnit;
 
+import org.hobbit.evaluationstorage.data.SerializableResult;
+
 /**
  * Created by Tim Ermilov on 16.05.17.
  */

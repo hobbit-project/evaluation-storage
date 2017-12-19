@@ -12,13 +12,16 @@ import org.hobbit.evaluationstorage.FileResultFuture;
 import org.hobbit.evaluationstorage.FileResultPairIterator;
 import org.hobbit.evaluationstorage.ResultFuture;
 import org.hobbit.evaluationstorage.ResultType;
-import org.hobbit.evaluationstorage.SerializableResult;
+import org.hobbit.evaluationstorage.data.SerializableResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Created by Tim Ermilov on 16.05.17.
+ * 
+ * @deprecated Should be used as {@link FileResultStoreBasedFacadeDecorator} to wrap a given {@link ResultStoreFacade}.
  */
+@Deprecated
 public class FileResultStoreFacade implements ResultStoreFacade {
     private static final Logger LOGGER = LoggerFactory.getLogger(RiakResultStoreFacade.class);
     private String defaultFolder = "/hobbit/storage/results/";
@@ -84,11 +87,6 @@ public class FileResultStoreFacade implements ResultStoreFacade {
             return Collections.emptyIterator();
         }
         return new FileResultPairIterator(Arrays.asList(files).iterator(), this);
-    }
-
-    @Override
-    public void run() throws Exception {
-        // nothing to do
     }
 
     @Override

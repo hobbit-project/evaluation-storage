@@ -32,10 +32,18 @@ public class EvaluationStorageMock extends EvaluationStorage {
 
     private final CountDownLatch startedLatch = new CountDownLatch(1);
 
+    public EvaluationStorageMock() {
+        super();
+    }
+
+    public EvaluationStorageMock(String storagePath) {
+        super(storagePath);
+    }
+
     public ResultStoreFacade getResultStoreFacade() {
         return this.smallResultStoreFacade;
     }
-
+    
     @Override
     protected void sendToCmdQueue(byte command, byte[] data) throws IOException {
         if (command == Commands.EVAL_STORAGE_READY_SIGNAL) {

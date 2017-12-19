@@ -21,8 +21,8 @@ import java.util.Iterator;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.BasicConfigurator;
 import org.hobbit.core.data.ResultPair;
+import org.hobbit.evaluationstorage.data.SerializableResult;
 import org.hobbit.evaluationstorage.resultstore.FileResultStoreFacade;
 import org.junit.Assert;
 import org.junit.Test;
@@ -38,10 +38,6 @@ public class FileResultStoreFacadeTest {
     private static final String TASK2 = "task2";
     private static final String TASK3 = "task3";
 
-    static {
-        BasicConfigurator.configure();
-    }
-
     private Random random = new Random();
 
     @Test
@@ -50,7 +46,6 @@ public class FileResultStoreFacadeTest {
         try {
             resultStoreFacade.setDefaultPath(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
             resultStoreFacade.init();
-            resultStoreFacade.run();
             SerializableResult task1Expected = new SerializableResult(0, new byte[] { 3 });
             SerializableResult task2Expected = new SerializableResult(1, new byte[] { 29, 12, 3, 2, 89, 2 });
             SerializableResult task3Expected = new SerializableResult(2, new byte[] { 29, 92, 3, 18, 39, 29, 103 });
@@ -75,7 +70,6 @@ public class FileResultStoreFacadeTest {
         try {
             resultStoreFacade.setDefaultPath(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
             resultStoreFacade.init();
-            resultStoreFacade.run();
             SerializableResult task1Actual = new SerializableResult(0, new byte[] { 0 });
             SerializableResult task2Actual = new SerializableResult(1, new byte[] { 12, 3, 2, 89, 2 });
             SerializableResult task3Actual = new SerializableResult(2, new byte[] { 92, 3, 18, 39, 29, 103 });
@@ -100,7 +94,6 @@ public class FileResultStoreFacadeTest {
         try {
             resultStoreFacade.setDefaultPath(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
             resultStoreFacade.init();
-            resultStoreFacade.run();
             SerializableResult task1Expected = new SerializableResult(0, new byte[] { 3 });
             SerializableResult task2Expected = new SerializableResult(1, new byte[] { 29, 12, 3, 2, 89, 2 });
             SerializableResult task3Expected = new SerializableResult(2, new byte[] { 29, 92, 3, 18, 39, 29, 103 });
@@ -140,7 +133,6 @@ public class FileResultStoreFacadeTest {
         try {
             resultStoreFacade.setDefaultPath(FileUtils.getTempDirectoryPath() + File.separator + random.nextInt());
             resultStoreFacade.init();
-            resultStoreFacade.run();
             Assert.assertNull(resultStoreFacade.get(ResultType.ACTUAL, TASK1).get());
             Assert.assertNull(resultStoreFacade.get(ResultType.EXPECTED, TASK1).get());
         } finally {

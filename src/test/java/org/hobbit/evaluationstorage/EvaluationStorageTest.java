@@ -16,19 +16,22 @@
  */
 package org.hobbit.evaluationstorage;
 
-import org.apache.log4j.BasicConfigurator;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Random;
+import java.util.concurrent.ExecutionException;
+
+import org.apache.commons.io.FileUtils;
 import org.hobbit.core.data.ResultPair;
+import org.hobbit.evaluationstorage.data.SerializableResult;
 import org.hobbit.evaluationstorage.mock.EvaluationStorageMock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.concurrent.ExecutionException;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * Tests for the {@link EvaluationStorage}.
@@ -40,16 +43,16 @@ public class EvaluationStorageTest {
     private static final String TASK1 = "task1";
     private static final String TASK2 = "task2";
     private static final String TASK3 = "task3";
-
-    static {
-        BasicConfigurator.configure();
-    }
+    private static final Random RANDOM = new Random();
 
     private EvaluationStorageMock evaluationStorage;
 
     @Before
     public void init() throws Exception {
-        evaluationStorage = new EvaluationStorageMock();
+        File storageDir = new File(FileUtils.getTempDirectoryPath() + File.separator + RANDOM.nextInt());
+        storageDir.deleteOnExit();
+        storageDir.mkdirs();
+        evaluationStorage = new EvaluationStorageMock(storageDir.getAbsolutePath());
         evaluationStorage.init();
         new Thread(() -> {
             try {
@@ -109,6 +112,7 @@ public class EvaluationStorageTest {
 
     @Test
     public void testIterator() {
+        evaluationStorage.setMaxObjectSize(5);
         byte[] task1DataExpected = new byte[]{3, 2};
         byte[] task2DataExpected = new byte[]{29, 12, 3, 2, 89, 2, 2};
         byte[] task3DataExpected = new byte[]{29, 92, 3, 18, 39, 29, 103, 2};
@@ -117,8 +121,8 @@ public class EvaluationStorageTest {
         evaluationStorage.receiveExpectedResponseData(TASK3, 2, task3DataExpected);
 
         byte[] task1DataActual = new byte[]{0, 2};
-        byte[] task2DataActual = new byte[]{12, 3, 2, 89, 2, 2};
-        byte[] task3DataActual = new byte[]{92, 3, 18, 39, 29, 103, 2};
+        byte[] task2DataActual = new byte[]{92, 3, 18, 39, 29, 103, 2};
+        byte[] task3DataActual = new byte[]{12, 3, 2};
         evaluationStorage.receiveResponseData(TASK1, 0, task1DataActual);
         evaluationStorage.receiveResponseData(TASK2, 1, task2DataActual);
         evaluationStorage.receiveResponseData(TASK3, 2, task3DataActual);

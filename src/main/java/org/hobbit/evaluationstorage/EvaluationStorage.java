@@ -16,19 +16,22 @@
  */
 package org.hobbit.evaluationstorage;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Iterator;
+
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.IOUtils;
 import org.hobbit.core.Commands;
 import org.hobbit.core.components.AbstractEvaluationStorage;
+import org.hobbit.core.components.Component;
 import org.hobbit.core.data.ResultPair;
 import org.hobbit.core.rabbit.RabbitMQUtils;
+import org.hobbit.evaluationstorage.data.SerializableResult;
+import org.hobbit.evaluationstorage.resultstore.FileResultStoreBasedFacadeDecorator;
 import org.hobbit.evaluationstorage.resultstore.FileResultStoreFacade;
 import org.hobbit.evaluationstorage.resultstore.ResultStoreFacade;
 import org.hobbit.evaluationstorage.resultstore.RiakResultStoreFacade;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.*;
 
 /**
  * The Evaluation Storage is a component that stores the gold standard results
@@ -38,18 +41,28 @@ import java.util.*;
  *
  * @author Ruben Taelman (ruben.taelman@ugent.be)
  */
-public class EvaluationStorage extends AbstractEvaluationStorage {
-    protected ResultStoreFacade smallResultStoreFacade;
-    protected ResultStoreFacade bigResultStoreFacade;
-    protected Exception exception;
+public class EvaluationStorage extends AbstractEvaluationStorage implements Component {
 
     private static final int MAX_OBJECT_SIZE = 100 * 1024; // 100mb
+    
+    protected ResultStoreFacade resultStoreFacade;
+    protected Exception exception;
+    protected String storagePath;
+    protected int maxObjectSize = MAX_OBJECT_SIZE;
+
+    public EvaluationStorage() {
+        this(null);
+    }
+
+    public EvaluationStorage(String storagePath) {
+        this.storagePath = storagePath;
+    }
 
     @Override
     public void init() throws Exception {
         super.init();
-        // create and init riak storage for small results
-        this.smallResultStoreFacade = new RiakResultStoreFacade(new ContainerController() {
+        // create and init the storage facade(s)
+        resultStoreFacade = new RiakResultStoreFacade(new ContainerController() {
             @Override
             public String createContainer(String imageName, String[] envVariables) {
                 return EvaluationStorage.this.createContainer(imageName, envVariables);
@@ -60,15 +73,15 @@ public class EvaluationStorage extends AbstractEvaluationStorage {
                 EvaluationStorage.this.stopContainer(containerId);
             }
         });
-        this.smallResultStoreFacade.init();
-        // create and init file storage for large results
-        this.bigResultStoreFacade = new FileResultStoreFacade();
-        this.bigResultStoreFacade.init();
+        resultStoreFacade = new FileResultStoreBasedFacadeDecorator(resultStoreFacade, maxObjectSize);
+        if (storagePath != null) {
+            ((FileResultStoreBasedFacadeDecorator) resultStoreFacade).setStorageFolder(storagePath);
+        }
+        this.resultStoreFacade.init();
     }
 
     @Override
     public void run() throws Exception {
-        smallResultStoreFacade.run();
         super.run();
         if (exception != null) {
             throw new IllegalStateException("Got an unexpected exception. Aborting.", exception);
@@ -77,47 +90,35 @@ public class EvaluationStorage extends AbstractEvaluationStorage {
 
     @Override
     public void close() throws IOException {
-        IOUtils.closeQuietly(smallResultStoreFacade);
+        IOUtils.closeQuietly(resultStoreFacade);
         super.close();
     }
 
     @Override
     public void receiveExpectedResponseData(String s, long l, byte[] bytes) {
-        int actualSize = bytes.length / 1024;
-        if (actualSize < MAX_OBJECT_SIZE) {
-            smallResultStoreFacade.put(ResultType.EXPECTED, s, new SerializableResult(l, bytes));
-        } else {
-            bigResultStoreFacade.put(ResultType.EXPECTED, s, new SerializableResult(l, bytes));
-        }
+        resultStoreFacade.put(ResultType.EXPECTED, s, new SerializableResult(l,  bytes));
     }
 
     @Override
     public void receiveResponseData(String s, long l, byte[] bytes) {
-        int actualSize = bytes.length / 1024;
-        if (actualSize < MAX_OBJECT_SIZE) {
-            smallResultStoreFacade.put(ResultType.ACTUAL, s, new SerializableResult(l, bytes));
-        } else {
-            bigResultStoreFacade.put(ResultType.ACTUAL, s, new SerializableResult(l, bytes));
-        }
+        resultStoreFacade.put(ResultType.ACTUAL, s, new SerializableResult(l, bytes));
     }
 
     @Override
     protected Iterator<ResultPair> createIterator() {
-        Iterator<ResultPair> si = smallResultStoreFacade.createIterator();
-        Iterator<ResultPair> bi = bigResultStoreFacade.createIterator();
-
-        return IteratorUtils.chainedIterator(si, bi);
+        return resultStoreFacade.createIterator();
     }
 
     @Override
     public void receiveCommand(byte command, byte[] data) {
-        // If this is the signal that a container stopped (and we have a class that we need to notify)
-        if ((command == Commands.DOCKER_CONTAINER_TERMINATED) && (smallResultStoreFacade != null)) {
+        // If this is the signal that a container stopped (and we have a class that we
+        // need to notify)
+        if ((command == Commands.DOCKER_CONTAINER_TERMINATED) && (resultStoreFacade != null)) {
             ByteBuffer buffer = ByteBuffer.wrap(data);
             String containerName = RabbitMQUtils.readString(buffer);
             int exitCode = buffer.get();
             try {
-                smallResultStoreFacade.containerStopped(containerName, exitCode);
+                resultStoreFacade.containerStopped(containerName, exitCode);
             } catch (Exception e) {
                 exception = e;
                 // release the mutex
@@ -126,5 +127,13 @@ public class EvaluationStorage extends AbstractEvaluationStorage {
         } else {
             super.receiveCommand(command, data);
         }
+    }
+
+    public int getMaxObjectSize() {
+        return maxObjectSize;
+    }
+
+    public void setMaxObjectSize(int maxObjectSize) {
+        this.maxObjectSize = maxObjectSize;
     }
 }

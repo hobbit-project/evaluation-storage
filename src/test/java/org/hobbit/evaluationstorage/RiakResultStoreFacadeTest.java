@@ -16,19 +16,19 @@
  */
 package org.hobbit.evaluationstorage;
 
-import org.apache.log4j.BasicConfigurator;
-import org.hobbit.core.data.ResultPair;
-import org.hobbit.evaluationstorage.resultstore.RiakResultStoreFacade;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import org.hobbit.core.data.ResultPair;
+import org.hobbit.evaluationstorage.data.SerializableResult;
+import org.hobbit.evaluationstorage.resultstore.RiakResultStoreFacade;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests for the {@link RiakResultStoreFacadeTest}.
@@ -40,10 +40,6 @@ public class RiakResultStoreFacadeTest {
     private static final String TASK1 = "task1";
     private static final String TASK2 = "task2";
     private static final String TASK3 = "task3";
-
-    static {
-        BasicConfigurator.configure();
-    }
 
     private RiakResultStoreFacade resultStoreFacade;
 
@@ -61,7 +57,6 @@ public class RiakResultStoreFacadeTest {
             }
         });
         resultStoreFacade.init();
-        resultStoreFacade.run();
     }
 
     @After
@@ -84,7 +79,6 @@ public class RiakResultStoreFacadeTest {
         assertThat(result1, is(task1Expected));
         assertThat(result2, is(task2Expected));
         assertThat(result3, is(task3Expected));
-
     }
 
     @Test

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with evaluation-storage.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.hobbit.evaluationstorage;
+package org.hobbit.evaluationstorage.data;
 
 import org.hobbit.core.data.Result;
 
@@ -31,10 +31,16 @@ public class SerializableResult implements Result {
     private static final int LONG_SIZE = Long.SIZE / Byte.SIZE;
 
     private final long sentTimestamp;
+    private final ResultValueType valueType;
     private final byte[] data;
 
     public SerializableResult(long sentTimestamp, byte[] data) {
+        this(sentTimestamp, ResultValueType.RESULT_DATA, data);
+    }
+
+    public SerializableResult(long sentTimestamp, ResultValueType valueType, byte[] data) {
         this.sentTimestamp = sentTimestamp;
+        this.valueType = valueType;
         this.data = data;
     }
 
@@ -49,7 +55,7 @@ public class SerializableResult implements Result {
 
     @Override
     public String toString() {
-        return String.format("Result@%s [%s]", sentTimestamp, Arrays.toString(data));
+        return String.format("Result@%s (%s) [%s]", sentTimestamp, valueType.toString(), Arrays.toString(data));
     }
 
     @Override
@@ -63,17 +69,15 @@ public class SerializableResult implements Result {
     }
 
     public byte[] serialize() {
-        return ByteBuffer
-                .allocate(LONG_SIZE + data.length)
-                .putLong(sentTimestamp)
-                .put(data)
+        return ByteBuffer.allocate(LONG_SIZE + 1 + data.length).putLong(sentTimestamp).put(valueType.toByte()).put(data)
                 .array();
     }
 
     public static SerializableResult deserialize(byte[] serializedData) {
         long sentTimestamp = ByteBuffer.wrap(serializedData, 0, LONG_SIZE).getLong();
-        byte[] data = new byte[serializedData.length - LONG_SIZE];
-        ByteBuffer.wrap(serializedData, LONG_SIZE, data.length).get(data);
-        return new SerializableResult(sentTimestamp, data);
+        ResultValueType valueType = ResultValueType.fromByte(serializedData[LONG_SIZE]);
+        byte[] data = Arrays.copyOfRange(serializedData, serializedData.length - (LONG_SIZE + 1),
+                serializedData.length);
+        return new SerializableResult(sentTimestamp, valueType, data);
     }
 }

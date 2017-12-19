@@ -16,21 +16,29 @@
  */
 package org.hobbit.evaluationstorage.resultstore;
 
-import org.hobbit.core.components.Component;
+import java.io.Closeable;
+import java.util.Iterator;
+
 import org.hobbit.core.components.ContainerStateObserver;
 import org.hobbit.core.data.ResultPair;
 import org.hobbit.evaluationstorage.ResultFuture;
 import org.hobbit.evaluationstorage.ResultType;
-import org.hobbit.evaluationstorage.SerializableResult;
-
-import java.util.Iterator;
+import org.hobbit.evaluationstorage.data.SerializableResult;
 
 /**
  * Facade for result stores.
  *
  * @author Ruben Taelman (ruben.taelman@ugent.be)
  */
-public interface ResultStoreFacade extends Component, ContainerStateObserver {
+public interface ResultStoreFacade extends Closeable, ContainerStateObserver {
+
+    /**
+     * This method initializes the component.
+     *
+     * @throws Exception
+     *             if an error occurs during the initialization
+     */
+    public void init() throws Exception;
 
     /**
      * Insert a result.

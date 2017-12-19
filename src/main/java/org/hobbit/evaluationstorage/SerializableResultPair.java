@@ -18,6 +18,7 @@ package org.hobbit.evaluationstorage;
 
 import org.hobbit.core.data.Result;
 import org.hobbit.core.data.ResultPair;
+import org.hobbit.evaluationstorage.data.SerializableResult;
 
 /**
  * Data holder for expected and actual data.
