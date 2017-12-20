@@ -30,10 +30,14 @@ import org.apache.commons.io.FileUtils;
 import org.hobbit.core.data.ResultPair;
 import org.hobbit.evaluationstorage.data.SerializableResult;
 import org.hobbit.evaluationstorage.mock.EvaluationStorageMock;
+import org.hobbit.evaluationstorage.mock.RiakContainerController4Testing;
+import org.hobbit.evaluationstorage.resultstore.RiakResultStoreFacade;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 /**
  * Tests for the {@link EvaluationStorage}.
@@ -46,11 +50,14 @@ public class EvaluationStorageTest {
     private static final String TASK2 = "task2";
     private static final String TASK3 = "task3";
     private static final Random RANDOM = new Random();
+    @Rule
+    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
     private EvaluationStorageMock evaluationStorage;
 
     @Before
     public void init() throws Exception {
+        environmentVariables.set(Constants.RIAK_NODES, "1");
         File storageDir = new File(FileUtils.getTempDirectoryPath() + File.separator + RANDOM.nextInt());
         storageDir.deleteOnExit();
         storageDir.mkdirs();
@@ -58,7 +65,7 @@ public class EvaluationStorageTest {
         // Reduce the max object size to make sure that files are written as
         // well
         evaluationStorage.setMaxObjectSize(5);
-        evaluationStorage.init();
+        evaluationStorage.init(new RiakResultStoreFacade(new RiakContainerController4Testing()));
         // new Thread(() -> {
         // try {
         // evaluationStorage.run();

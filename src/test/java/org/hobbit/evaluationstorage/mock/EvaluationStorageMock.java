@@ -32,18 +32,22 @@ import java.util.concurrent.CountDownLatch;
 public class EvaluationStorageMock extends EvaluationStorage {
 
     private final CountDownLatch startedLatch = new CountDownLatch(1);
-    
+
     @Override
     public void init() throws Exception {
+        init(new InMemoryResultStore());
+    }
+
+    public void init(ResultStoreFacade facade) throws Exception {
+        this.resultStoreFacade = facade;
         // create and init the storage facade(s)
-        resultStoreFacade = new InMemoryResultStore();
         resultStoreFacade = new FileResultStoreBasedFacadeDecorator(resultStoreFacade, maxObjectSize);
         if (storagePath != null) {
             ((FileResultStoreBasedFacadeDecorator) resultStoreFacade).setStorageFolder(storagePath);
         }
         this.resultStoreFacade.init();
     }
-    
+
     public EvaluationStorageMock() {
         super();
     }
@@ -55,7 +59,7 @@ public class EvaluationStorageMock extends EvaluationStorage {
     public ResultStoreFacade getResultStoreFacade() {
         return this.resultStoreFacade;
     }
-    
+
     @Override
     protected void sendToCmdQueue(byte command, byte[] data) throws IOException {
         if (command == Commands.EVAL_STORAGE_READY_SIGNAL) {
