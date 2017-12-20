@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM openjdk:8-jre-alpine
 
 ADD target/evaluation-storage.jar /evalrun/evaluation-storage.jar
 
