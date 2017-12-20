@@ -17,6 +17,7 @@
 package org.hobbit.evaluationstorage;
 
 import java.io.File;
+import java.util.BitSet;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -118,17 +119,34 @@ public class FileResultStoreFacadeTest {
             Iterator<? extends ResultPair> it = resultStoreFacade.createIterator();
             ResultPair resultPair;
 
-            resultPair = it.next();
-            Assert.assertEquals(task1Expected, resultPair.getExpected());
-            Assert.assertEquals(task1Actual, resultPair.getActual());
-
-            resultPair = it.next();
-            Assert.assertEquals(task2Expected, resultPair.getExpected());
-            Assert.assertEquals(task2Actual, resultPair.getActual());
-
-            resultPair = it.next();
-            Assert.assertEquals(task3Expected, resultPair.getExpected());
-            Assert.assertEquals(task3Actual, resultPair.getActual());
+            BitSet seenTasks = new BitSet(3);
+            int taskId;
+            while (it.hasNext()) {
+                resultPair = it.next();
+                taskId = (int) resultPair.getExpected().getSentTimestamp();
+                switch (taskId) {
+                case 0: {
+                    Assert.assertEquals(task1Expected, resultPair.getExpected());
+                    Assert.assertEquals(task1Actual, resultPair.getActual());
+                    break;
+                }
+                case 1: {
+                    Assert.assertEquals(task2Expected, resultPair.getExpected());
+                    Assert.assertEquals(task2Actual, resultPair.getActual());
+                    break;
+                }
+                case 2: {
+                    Assert.assertEquals(task3Expected, resultPair.getExpected());
+                    Assert.assertEquals(task3Actual, resultPair.getActual());
+                    break;
+                }
+                default: {
+                    Assert.fail("Got a result with an unknown time stamp: " + taskId);
+                }
+                }
+                seenTasks.set(taskId);
+            }
+            Assert.assertEquals("Not all expected tasks have been retrieved", 3, seenTasks.cardinality());
         } finally {
             resultStoreFacade.close();
         }

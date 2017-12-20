@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
+import java.util.BitSet;
 import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 
@@ -28,6 +29,7 @@ import org.hobbit.evaluationstorage.data.SerializableResult;
 import org.hobbit.evaluationstorage.mock.RiakContainerController4Testing;
 import org.hobbit.evaluationstorage.resultstore.RiakResultStoreFacade;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,17 +119,34 @@ public class RiakResultStoreFacadeTest {
         Iterator<ResultPair> it = resultStoreFacade.createIterator();
         ResultPair resultPair;
 
-        resultPair = it.next();
-        assertThat(resultPair.getExpected(), is(task1Expected));
-        assertThat(resultPair.getActual(), is(task1Actual));
-
-        resultPair = it.next();
-        assertThat(resultPair.getExpected(), is(task2Expected));
-        assertThat(resultPair.getActual(), is(task2Actual));
-
-        resultPair = it.next();
-        assertThat(resultPair.getExpected(), is(task3Expected));
-        assertThat(resultPair.getActual(), is(task3Actual));
+        BitSet seenTasks = new BitSet(3);
+        int taskId;
+        while (it.hasNext()) {
+            resultPair = it.next();
+            taskId = (int) resultPair.getExpected().getSentTimestamp();
+            switch (taskId) {
+            case 0: {
+                Assert.assertEquals(task1Expected, resultPair.getExpected());
+                Assert.assertEquals(task1Actual, resultPair.getActual());
+                break;
+            }
+            case 1: {
+                Assert.assertEquals(task2Expected, resultPair.getExpected());
+                Assert.assertEquals(task2Actual, resultPair.getActual());
+                break;
+            }
+            case 2: {
+                Assert.assertEquals(task3Expected, resultPair.getExpected());
+                Assert.assertEquals(task3Actual, resultPair.getActual());
+                break;
+            }
+            default: {
+                Assert.fail("Got a result with an unknown time stamp: " + taskId);
+            }
+            }
+            seenTasks.set(taskId);
+        }
+        Assert.assertEquals("Not all expected tasks have been retrieved", 3, seenTasks.cardinality());
     }
 
 }
