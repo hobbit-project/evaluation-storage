@@ -41,7 +41,7 @@ import org.hobbit.evaluationstorage.resultstore.RiakResultStoreFacade;
  */
 public class EvaluationStorage extends AbstractEvaluationStorage implements Component {
 
-    private static final int MAX_OBJECT_SIZE = 100 * 1024 * 1024; // 100mb
+    private static final int MAX_OBJECT_SIZE = 10 * 1024 * 1024; // 10mb
 
     protected ResultStoreFacade resultStoreFacade;
     protected Exception exception;
