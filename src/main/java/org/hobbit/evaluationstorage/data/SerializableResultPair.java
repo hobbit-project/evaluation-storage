@@ -34,20 +34,10 @@ public class SerializableResultPair implements ResultPair {
         this.actual = actual;
     }
 
-    @Override
-    public Result getExpected() {
-        return expected;
-    }
-    
     public SerializableResult getExpectedSerializable() {
         return expected;
     }
 
-    @Override
-    public Result getActual() {
-        return actual;
-    }
-    
     public SerializableResult getActualSerializable() {
         return actual;
     }

@@ -12,7 +12,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.hobbit</groupId>
     <artifactId>evaluation-storage</artifactId>
-    <version>1.0.8</version>
+    <version>1.0.8-core1.1.x</version>
 
     <!-- LICENSE -->
     <licenses>
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>org.hobbit</groupId>
             <artifactId>core</artifactId>
-            <version>1.0.12</version>
+            <version>1.1.2</version>
         </dependency>
         <!-- Riak client -->
         <dependency>
