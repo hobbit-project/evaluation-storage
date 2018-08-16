@@ -4,8 +4,8 @@ build:
 	mvn clean package -U -Dmaven.test.skip=true
 
 dockerize:
-	docker build -t git.project-hobbit.eu:4567/defaulthobbituser/defaultevaluationstorage:1.0.8-SNAPSHOT .
+	docker build -t hobbitproject/defaultevaluationstorage:1.0.8 .
 
 push:
-	docker tag git.project-hobbit.eu:4567/defaulthobbituser/defaultevaluationstorage:1.0.8 git.project-hobbit.eu:4567/defaulthobbituser/defaultevaluationstorage:latest
-	docker push git.project-hobbit.eu:4567/defaulthobbituser/defaultevaluationstorage
+	docker tag hobbitproject/defaultevaluationstorage:1.0.8 hobbitproject/defaultevaluationstorage:latest
+	docker push hobbitproject/defaultevaluationstorage
