@@ -6,4 +6,4 @@ ADD adjust-logging.sh /evalrun/adjust-logging.sh
 
 WORKDIR /evalrun
 
-CMD adjust-logging.sh && java -cp evaluation-storage.jar org.hobbit.core.run.ComponentStarter org.hobbit.evaluationstorage.EvaluationStorage
+CMD adjust-logging.sh && java -cp evaluation-storage.jar:. org.hobbit.core.run.ComponentStarter org.hobbit.evaluationstorage.EvaluationStorage
