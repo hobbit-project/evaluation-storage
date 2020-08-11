@@ -14,3 +14,10 @@ This implementation extends the [abstract implementation provided by the hobbit-
 | `EVAL_STORAGE_2_EVAL_MODULE_QUEUE_NAME` | The queue for answering the requests |
 
 The variable names are defined in the [Constants class](https://github.com/hobbit-project/core/blob/develop/src/main/java/org/hobbit/core/Constants.java#L96).
+
+## Deploying new version
+
+- Reference the new version of this Docker image in the HOBBIT core library (`DEFAULT_EVAL_STORAGE_IMAGE` in the `AbstractBenchmarkController` class).
+- Deploy the new version of the HOBBIT core library.
+- Reference the deployed version of the HOBBIT core library in this project.
+- Build and deploy a new version of this Docker image (the one which was referenced in the first step).
