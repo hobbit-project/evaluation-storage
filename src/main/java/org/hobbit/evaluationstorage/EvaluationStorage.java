@@ -30,6 +30,8 @@ import org.hobbit.evaluationstorage.data.SerializableResult;
 import org.hobbit.evaluationstorage.resultstore.FileResultStoreBasedFacadeDecorator;
 import org.hobbit.evaluationstorage.resultstore.ResultStoreFacade;
 import org.hobbit.evaluationstorage.resultstore.RiakResultStoreFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Evaluation Storage is a component that stores the gold standard results
@@ -42,6 +44,8 @@ import org.hobbit.evaluationstorage.resultstore.RiakResultStoreFacade;
 public class EvaluationStorage extends AbstractEvaluationStorage implements Component {
 
     private static final int MAX_OBJECT_SIZE = 10 * 1024 * 1024; // 10mb
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationStorage.class);
 
     protected ResultStoreFacade resultStoreFacade;
     protected Exception exception;
@@ -58,6 +62,7 @@ public class EvaluationStorage extends AbstractEvaluationStorage implements Comp
 
     @Override
     public void init() throws Exception {
+        LOGGER.info("Initializing evaluation storage");
         super.init();
         // create and init the storage facade(s)
         resultStoreFacade = createStoreFacade();
@@ -66,12 +71,17 @@ public class EvaluationStorage extends AbstractEvaluationStorage implements Comp
             ((FileResultStoreBasedFacadeDecorator) resultStoreFacade).setStorageFolder(storagePath);
         }
         this.resultStoreFacade.init();
+        LOGGER.info("Initialized evaluation storage - done");
     }
 
     private ResultStoreFacade createStoreFacade() throws Exception {
         return new RiakResultStoreFacade(new ContainerController() {
             @Override
             public String createContainer(String imageName, String[] envVariables) {
+                LOGGER.info("Creating container {}", imageName);
+                for (String envVariable : envVariables) {
+                    LOGGER.info("Environment variable {}", envVariable);
+                }
                 return EvaluationStorage.this.createContainer(imageName, envVariables);
             }
 

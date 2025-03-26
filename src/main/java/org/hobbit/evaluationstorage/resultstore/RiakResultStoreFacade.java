@@ -57,7 +57,7 @@ public class RiakResultStoreFacade implements ResultStoreFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RiakResultStoreFacade.class);
 
-    private static final String RIAK_IMAGE_NAME = "git.project-hobbit.eu:4567/gitadmin/basho-riak-kv:1.0.0";
+    private static final String RIAK_IMAGE_NAME = "git.project-hobbit.eu:4567/gitadmin/basho-riak-kv:1.0.1";
 
     private final ContainerController containerController;
     private final String[] nodeContainerIds;
