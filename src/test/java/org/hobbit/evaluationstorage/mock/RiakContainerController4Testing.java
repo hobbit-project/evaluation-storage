@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.hobbit.evaluationstorage.ContainerController;
-import org.hobbit.utils.docker.DockerHelper;
+import org.hobbit.utils.DNSHelper;
 
 public class RiakContainerController4Testing implements ContainerController {
 
@@ -45,7 +45,7 @@ public class RiakContainerController4Testing implements ContainerController {
             }
             containerId = IOUtils.toString(in).trim();
             IOUtils.closeQuietly(in);
-            return DockerHelper.getHost();
+            return DNSHelper.getDNSName();
         } catch (Exception e) {
             throw new IllegalStateException("Couldn't create container.", e);
         }
